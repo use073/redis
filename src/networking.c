@@ -26,7 +26,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-
+/**
+ * 网络模块的主要实现
+ */
 #include "server.h"
 #include "atomicvar.h"
 #include "cluster.h"

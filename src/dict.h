@@ -76,7 +76,7 @@ typedef struct dictht {
     unsigned long sizemask;
     unsigned long used;
 } dictht;
-
+//字典结构体
 typedef struct dict {
     dictType *type;
     void *privdata;

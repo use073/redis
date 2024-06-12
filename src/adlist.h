@@ -54,6 +54,7 @@ typedef struct list {
 } list;
 
 /* Functions implemented as macros */
+/*函数宏实现*/
 #define listLength(l) ((l)->len)
 #define listFirst(l) ((l)->head)
 #define listLast(l) ((l)->tail)

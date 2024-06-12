@@ -39,7 +39,7 @@
 
 #define RIO_FLAG_READ_ERROR (1<<0)
 #define RIO_FLAG_WRITE_ERROR (1<<1)
-
+//redis io的封装结构体，他将io操作进行抽象，封装了输入/输出流的处理，网络套接字，文件等
 struct _rio {
     /* Backend functions.
      * Since this functions do not tolerate short writes or reads the return

@@ -34,7 +34,9 @@
 
 #include <signal.h>
 #include <ctype.h>
-
+/**
+ *数据库操作的实现
+ */
 /* Database backup. */
 struct dbBackup {
     redisDb *dbarray;
@@ -1425,6 +1427,7 @@ void setExpire(client *c, redisDb *db, robj *key, long long when) {
 
 /* Return the expire time of the specified key, or -1 if no expire
  * is associated with this key (i.e. the key is non volatile) */
+//查询到过期时间
 long long getExpire(redisDb *db, robj *key) {
     dictEntry *de;
 

@@ -107,7 +107,7 @@ typedef long long ustime_t; /* microsecond time type. */
 #define OBJ_SHARED_BULKHDR_LEN 32
 #define OBJ_SHARED_HDR_STRLEN(_len_) (((_len_) < 10) ? 4 : 5) /* see shared.mbulkhdr etc. */
 #define LOG_MAX_LEN    1024 /* Default maximum length of syslog messages.*/
-#define AOF_REWRITE_ITEMS_PER_CMD 64
+#define AOF_REWRITE_ITEMS_PER_CMD 64    /*如果单个key中包含了超过64个元素，则进行拆分成多个指令来记录aof的值，避免发生缓冲区溢出*/
 #define AOF_READ_DIFF_INTERVAL_BYTES (1024*10)
 #define CONFIG_AUTHPASS_MAX_LEN 512
 #define CONFIG_RUN_ID_SIZE 40
@@ -1370,12 +1370,12 @@ struct redisServer {
     time_t aof_rewrite_time_start;  /* Current AOF rewrite start time. */
     int aof_lastbgrewrite_status;   /* C_OK or C_ERR */
     unsigned long aof_delayed_fsync;  /* delayed AOF fsync() counter */
-    int aof_rewrite_incremental_fsync;/* fsync incrementally while aof rewriting? */
+    int aof_rewrite_incremental_fsync;/* fsync incrementally while aof rewriting? aof重写的增量同步？*/
     int rdb_save_incremental_fsync;   /* fsync incrementally while rdb saving? */
     int aof_last_write_status;      /* C_OK or C_ERR */
     int aof_last_write_errno;       /* Valid if aof write/fsync status is ERR */
     int aof_load_truncated;         /* Don't stop on unexpected AOF EOF. */
-    int aof_use_rdb_preamble;       /* Use RDB preamble on AOF rewrites. */
+    int aof_use_rdb_preamble;       /* Use RDB preamble on AOF rewrites. 在 AOF 重写中使用 RDB 前导,也就是混合持久化*/
     redisAtomic int aof_bio_fsync_status; /* Status of AOF fsync in bio job. */
     redisAtomic int aof_bio_fsync_errno;  /* Errno of AOF fsync in bio job. */
     /* AOF pipes used to communicate between parent and child during rewrite. */

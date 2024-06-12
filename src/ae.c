@@ -45,7 +45,9 @@
 
 #include "zmalloc.h"
 #include "config.h"
-
+/**
+ *事件驱动模型实现
+ */
 /* Include the best multiplexing layer supported by this system.
  * The following should be ordered by performances, descending. */
 #ifdef HAVE_EVPORT

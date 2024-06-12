@@ -26,6 +26,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
+/**
+ * RDB 持久化的实现
+ */
 
 #include "server.h"
 #include "lzf.h"    /* LZF compression library */

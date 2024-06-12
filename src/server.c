@@ -6222,7 +6222,9 @@ redisTestProc *getTestProcByName(const char *name) {
     return NULL;
 }
 #endif
-
+/**
+* 主函数入口
+*/
 int main(int argc, char **argv) {
     struct timeval tv;
     int j;
@@ -6294,7 +6296,9 @@ int main(int argc, char **argv) {
     getRandomBytes(hashseed,sizeof(hashseed));
     dictSetHashFunctionSeed(hashseed);
     server.sentinel_mode = checkForSentinelMode(argc,argv);
+    //初始化服务器
     initServerConfig();
+    //其他初始化工作,随后进入循环
     ACLInit(); /* The ACL subsystem must be initialized ASAP because the
                   basic networking code and client creation depends on it. */
     moduleInitModulesSystem();
