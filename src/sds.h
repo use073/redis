@@ -32,7 +32,7 @@
 
 #ifndef __SDS_H
 #define __SDS_H
-
+//sds最大预分配
 #define SDS_MAX_PREALLOC (1024*1024)
 extern const char *SDS_NOINIT;
 
@@ -44,35 +44,40 @@ typedef char *sds;
 
 /* Note: sdshdr5 is never used, we just access the flags byte directly.
  * However is here to document the layout of type 5 SDS strings. */
+//在 SDS_TYPE_5 中，字符串的长度存储在 flags 字段的高 5 位，而 flags 字段的低 3 位用来表示 SDS 的类型（即 SDS_TYPE_5）。
+//因此，SDS_TYPE_5 的结构比其他类型的 SDS 更加紧凑，没有单独的 len 字段
 struct __attribute__ ((__packed__)) sdshdr5 {
     unsigned char flags; /* 3 lsb of type, and 5 msb of string length */
     char buf[];
 };
+//8位,flags一共存储8位数据，除了sdshdr5外其他的只有3位有效数据，保存的是sds的数据类型即SDS_TYPE_8
 struct __attribute__ ((__packed__)) sdshdr8 {
-    uint8_t len; /* used */
-    uint8_t alloc; /* excluding the header and null terminator */
-    unsigned char flags; /* 3 lsb of type, 5 unused bits */
-    char buf[];
+    uint8_t len; /* used 具体数据已经使用长度*/
+    uint8_t alloc; /* excluding the header and null terminator sds中具体数据空间分配的大小*/
+    unsigned char flags; /* 3 lsb of type, 5 unused bits 一些标志位，用于存储SDS类型等信息,3位存储类型，后5位未使用*/
+    char buf[];//具体的数据
 };
+//16位
 struct __attribute__ ((__packed__)) sdshdr16 {
     uint16_t len; /* used */
     uint16_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
 };
+//32位
 struct __attribute__ ((__packed__)) sdshdr32 {
     uint32_t len; /* used */
     uint32_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
 };
+//64位
 struct __attribute__ ((__packed__)) sdshdr64 {
     uint64_t len; /* used */
     uint64_t alloc; /* excluding the header and null terminator */
     unsigned char flags; /* 3 lsb of type, 5 unused bits */
     char buf[];
 };
-
 #define SDS_TYPE_5  0
 #define SDS_TYPE_8  1
 #define SDS_TYPE_16 2
@@ -83,8 +88,12 @@ struct __attribute__ ((__packed__)) sdshdr64 {
 #define SDS_HDR_VAR(T,s) struct sdshdr##T *sh = (void*)((s)-(sizeof(struct sdshdr##T)));
 #define SDS_HDR(T,s) ((struct sdshdr##T *)((s)-(sizeof(struct sdshdr##T))))
 #define SDS_TYPE_5_LEN(f) ((f)>>SDS_TYPE_BITS)
+/*inline是为关键字，表示内联函数，译器在编译时会尝试将该函数的代码直接插入到调用它的地方，
+ *而不是通过常规的函数调用机制来执行。这种做法称为内联展开，旨在减少函数调用的开销，从而提高代码的执行效率*/
 
+//获取sds的信息长度
 static inline size_t sdslen(const sds s) {
+    //这个说明是需要获取sds结构中，s的前面一个字符
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
@@ -100,8 +109,9 @@ static inline size_t sdslen(const sds s) {
     }
     return 0;
 }
-
+//获取sds中未使用的空间,采用的是分配空间大小-已经使用空间大小
 static inline size_t sdsavail(const sds s) {
+    //这个说明是需要获取sds结构中，s的前面一个字符
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5: {
@@ -126,7 +136,7 @@ static inline size_t sdsavail(const sds s) {
     }
     return 0;
 }
-
+//设置已经使用的空间大小
 static inline void sdssetlen(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
@@ -150,12 +160,13 @@ static inline void sdssetlen(sds s, size_t newlen) {
             break;
     }
 }
-
+//sds长度增加
 static inline void sdsinclen(sds s, size_t inc) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
             {
+                //获取到sds前面一位置的flag的位置，将其设置为新的大小
                 unsigned char *fp = ((unsigned char*)s)-1;
                 unsigned char newlen = SDS_TYPE_5_LEN(flags)+inc;
                 *fp = SDS_TYPE_5 | (newlen << SDS_TYPE_BITS);
@@ -177,6 +188,7 @@ static inline void sdsinclen(sds s, size_t inc) {
 }
 
 /* sdsalloc() = sdsavail() + sdslen() */
+//sds中字符串空间的大小，大小为未使用的大小+sds的未使用的空间
 static inline size_t sdsalloc(const sds s) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
@@ -193,11 +205,12 @@ static inline size_t sdsalloc(const sds s) {
     }
     return 0;
 }
-
+//sds设置新的申请空间大小
 static inline void sdssetalloc(sds s, size_t newlen) {
     unsigned char flags = s[-1];
     switch(flags&SDS_TYPE_MASK) {
         case SDS_TYPE_5:
+            //当前类型下，没有独立记录申请空间大小，所以这里不进行记录
             /* Nothing to do, this type has no total allocation info. */
             break;
         case SDS_TYPE_8:
@@ -214,7 +227,13 @@ static inline void sdssetalloc(sds s, size_t newlen) {
             break;
     }
 }
-
+//函数定义
+/**
+ *
+ * @param init
+ * @param initlen
+ * @return
+ */
 sds sdsnewlen(const void *init, size_t initlen);
 sds sdstrynewlen(const void *init, size_t initlen);
 sds sdsnew(const char *init);

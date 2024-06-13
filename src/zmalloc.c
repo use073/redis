@@ -96,12 +96,20 @@ static void (*zmalloc_oom_handler)(size_t) = zmalloc_default_oom;
 
 /* Try allocating memory, and return NULL if failed.
  * '*usable' is set to the usable size if non NULL. */
+/**
+ * 尝试申请空间,如果返回null则表示申请内存失败
+ * @param size
+ * @param usable
+ * @return
+ */
 void *ztrymalloc_usable(size_t size, size_t *usable) {
     ASSERT_NO_SIZE_OVERFLOW(size);
+    //申请内存，如果size>0则申请size的大小不然申请long的空间
     void *ptr = malloc(MALLOC_MIN_SIZE(size)+PREFIX_SIZE);
 
     if (!ptr) return NULL;
 #ifdef HAVE_MALLOC_SIZE
+    //获取ptr对应的大小
     size = zmalloc_size(ptr);
     update_zmalloc_stat_alloc(size);
     if (usable) *usable = size;
@@ -129,6 +137,7 @@ void *ztrymalloc(size_t size) {
 
 /* Allocate memory or panic.
  * '*usable' is set to the usable size if non NULL. */
+//申请内存或者崩溃
 void *zmalloc_usable(size_t size, size_t *usable) {
     void *ptr = ztrymalloc_usable(size, usable);
     if (!ptr) zmalloc_oom_handler(size);
@@ -260,6 +269,7 @@ void *ztryrealloc(void *ptr, size_t size) {
 
 /* Reallocate memory or panic.
  * '*usable' is set to the usable size if non NULL. */
+//重新申请内存，新的空间大小会覆盖掉老的空间大小
 void *zrealloc_usable(void *ptr, size_t size, size_t *usable) {
     ptr = ztryrealloc_usable(ptr, size, usable);
     if (!ptr && size != 0) zmalloc_oom_handler(size);
