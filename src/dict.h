@@ -46,7 +46,7 @@
 
 /* Unused arguments generate annoying warnings... */
 #define DICT_NOTUSED(V) ((void) V)
-
+//字典的entry结构
 typedef struct dictEntry {
     void *key;
     union {
@@ -57,19 +57,20 @@ typedef struct dictEntry {
     } v;
     struct dictEntry *next;
 } dictEntry;
-
+//字典的类型分类
 typedef struct dictType {
     uint64_t (*hashFunction)(const void *key);
     void *(*keyDup)(void *privdata, const void *key);
     void *(*valDup)(void *privdata, const void *obj);
     int (*keyCompare)(void *privdata, const void *key1, const void *key2);
-    void (*keyDestructor)(void *privdata, void *key);
-    void (*valDestructor)(void *privdata, void *obj);
+    void (*keyDestructor)(void *privdata, void *key); //key解析器
+    void (*valDestructor)(void *privdata, void *obj); //value解析器
     int (*expandAllowed)(size_t moreMem, double usedRatio);
 } dictType;
 
 /* This is our hash table structure. Every dictionary has two of this as we
  * implement incremental rehashing, for the old to the new table. */
+//字典hashtable，每个字典都有新旧两个hash表，在下面的字典结构中引用
 typedef struct dictht {
     dictEntry **table;
     unsigned long size;
@@ -78,10 +79,10 @@ typedef struct dictht {
 } dictht;
 //字典结构体
 typedef struct dict {
-    dictType *type;
-    void *privdata;
-    dictht ht[2];
-    long rehashidx; /* rehashing not in progress if rehashidx == -1 */
+    dictType *type;//类型
+    void *privdata;//数据
+    dictht ht[2];   //哈希表数组，包含两个哈希表。Redis 使用渐进式重新哈希（rehashing），通过这个数组在 rehash 过程中维护旧表和新表,0表示的是老的，1表示新的
+    long rehashidx; /* rehashing not in progress if rehashidx == -1 如果为-1则未进行rehash*/
     int16_t pauserehash; /* If >0 rehashing is paused (<0 indicates coding error) */
 } dict;
 
@@ -89,6 +90,7 @@ typedef struct dict {
  * dictAdd, dictFind, and other functions against the dictionary even while
  * iterating. Otherwise it is a non safe iterator, and only dictNext()
  * should be called while iterating. */
+//字典迭代器
 typedef struct dictIterator {
     dict *d;
     long index;
@@ -97,11 +99,13 @@ typedef struct dictIterator {
     /* unsafe iterator fingerprint for misuse detection. */
     unsigned long long fingerprint;
 } dictIterator;
-
+//扫描字典
 typedef void (dictScanFunction)(void *privdata, const dictEntry *de);
+//扫描字典桶(hash桶)
 typedef void (dictScanBucketFunction)(void *privdata, dictEntry **bucketref);
 
 /* This is the initial size of every hash table */
+//hash表初始化大小
 #define DICT_HT_INITIAL_SIZE     4
 
 /* ------------------------------- Macros ------------------------------------*/
