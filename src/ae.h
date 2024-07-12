@@ -90,19 +90,20 @@ typedef struct aeTimeEvent {
 } aeTimeEvent;
 
 /* A fired event */
+//用于表示已经触发的事件
 typedef struct aeFiredEvent {
-    int fd;
-    int mask;
+    int fd;//文件描述符（file descriptor），标识哪个文件描述符上触发了事件
+    int mask;//事件掩码（event mask），表示在该文件描述符上触发了哪些类型的事件（如可读、可写等）
 } aeFiredEvent;
 
 /* State of an event based program */
 typedef struct aeEventLoop {
-    int maxfd;   /* highest file descriptor currently registered */
+    int maxfd;   /* highest file descriptor currently registered 最大文件句柄*/
     int setsize; /* max number of file descriptors tracked */
     long long timeEventNextId;
-    aeFileEvent *events; /* Registered events */
-    aeFiredEvent *fired; /* Fired events */
-    aeTimeEvent *timeEventHead;
+    aeFileEvent *events; /* Registered events 注册事件*/
+    aeFiredEvent *fired; /* Fired events 触发事件*/
+    aeTimeEvent *timeEventHead;//时间事件
     int stop;
     void *apidata; /* This is used for polling API specific data */
     aeBeforeSleepProc *beforesleep;

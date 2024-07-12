@@ -61,6 +61,7 @@
 
 /*-----------------------------------------------------------------------------
  * Skiplist implementation of the low level API
+ * 跳表的底层api实现
  *----------------------------------------------------------------------------*/
 
 int zslLexValueGteMin(sds value, zlexrangespec *spec);
@@ -68,6 +69,7 @@ int zslLexValueLteMax(sds value, zlexrangespec *spec);
 
 /* Create a skiplist node with the specified number of levels.
  * The SDS string 'ele' is referenced by the node after the call. */
+//创建一个跳表节点
 zskiplistNode *zslCreateNode(int level, double score, sds ele) {
     zskiplistNode *zn =
         zmalloc(sizeof(*zn)+level*sizeof(struct zskiplistLevel));
@@ -77,14 +79,19 @@ zskiplistNode *zslCreateNode(int level, double score, sds ele) {
 }
 
 /* Create a new skiplist. */
+//创建一个跳表,创建一个头节点,尾节点设置为null
 zskiplist *zslCreate(void) {
     int j;
     zskiplist *zsl;
-
+    //申请空间
     zsl = zmalloc(sizeof(*zsl));
+    //层级为1
     zsl->level = 1;
+    //长度设置为0
     zsl->length = 0;
+    //创建一个头节点
     zsl->header = zslCreateNode(ZSKIPLIST_MAXLEVEL,0,NULL);
+    //初始化每一个level的头
     for (j = 0; j < ZSKIPLIST_MAXLEVEL; j++) {
         zsl->header->level[j].forward = NULL;
         zsl->header->level[j].span = 0;
@@ -97,16 +104,19 @@ zskiplist *zslCreate(void) {
 /* Free the specified skiplist node. The referenced SDS string representation
  * of the element is freed too, unless node->ele is set to NULL before calling
  * this function. */
+//释放节点
 void zslFreeNode(zskiplistNode *node) {
     sdsfree(node->ele);
     zfree(node);
 }
 
 /* Free a whole skiplist. */
+//释放整个跳表的资源
 void zslFree(zskiplist *zsl) {
     zskiplistNode *node = zsl->header->level[0].forward, *next;
 
     zfree(zsl->header);
+    //释放整条链表
     while(node) {
         next = node->level[0].forward;
         zslFreeNode(node);
@@ -119,6 +129,7 @@ void zslFree(zskiplist *zsl) {
  * The return value of this function is between 1 and ZSKIPLIST_MAXLEVEL
  * (both inclusive), with a powerlaw-alike distribution where higher
  * levels are less likely to be returned. */
+//一个随机生成跳表层数的函数，层数越高概率越低
 int zslRandomLevel(void) {
     int level = 1;
     while ((random()&0xFFFF) < (ZSKIPLIST_P * 0xFFFF))
@@ -129,16 +140,20 @@ int zslRandomLevel(void) {
 /* Insert a new node in the skiplist. Assumes the element does not already
  * exist (up to the caller to enforce that). The skiplist takes ownership
  * of the passed SDS string 'ele'. */
+//增加一个新的元素节点到跳表中
+//TODO 暂时没看懂它的逻辑，后续回来整理
 zskiplistNode *zslInsert(zskiplist *zsl, double score, sds ele) {
     zskiplistNode *update[ZSKIPLIST_MAXLEVEL], *x;
     unsigned int rank[ZSKIPLIST_MAXLEVEL];
     int i, level;
-
+    //isnan(x) 用于检查一个浮点数是否是 "Not-a-Number" (NaN)
     serverAssert(!isnan(score));
     x = zsl->header;
+    //找到插入的位置
     for (i = zsl->level-1; i >= 0; i--) {
         /* store rank that is crossed to reach the insert position */
         rank[i] = i == (zsl->level-1) ? 0 : rank[i+1];
+        //找到对应的节点位置
         while (x->level[i].forward &&
                 (x->level[i].forward->score < score ||
                     (x->level[i].forward->score == score &&
@@ -153,7 +168,9 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, sds ele) {
      * scores, reinserting the same element should never happen since the
      * caller of zslInsert() should test in the hash table if the element is
      * already inside or not. */
+    //确定需要更的层数
     level = zslRandomLevel();
+    //如果新层数超过当前跳表的最大层数，初始化新层级。
     if (level > zsl->level) {
         for (i = zsl->level; i < level; i++) {
             rank[i] = 0;
@@ -162,7 +179,9 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, sds ele) {
         }
         zsl->level = level;
     }
+    //分配并初始化新节点。
     x = zslCreateNode(level,score,ele);
+    //更新新节点和相关节点的前向指针和跨度。
     for (i = 0; i < level; i++) {
         x->level[i].forward = update[i]->level[i].forward;
         update[i]->level[i].forward = x;
@@ -173,21 +192,25 @@ zskiplistNode *zslInsert(zskiplist *zsl, double score, sds ele) {
     }
 
     /* increment span for untouched levels */
+    //更新未涉及的层级的跨度。
     for (i = level; i < zsl->level; i++) {
         update[i]->level[i].span++;
     }
-
+    //设置新节点的后向指针。
     x->backward = (update[0] == zsl->header) ? NULL : update[0];
+    //更新新节点后继节点的后向指针或尾指针。
     if (x->level[0].forward)
         x->level[0].forward->backward = x;
     else
         zsl->tail = x;
+    //更新跳表长度
     zsl->length++;
     return x;
 }
 
 /* Internal function used by zslDelete, zslDeleteRangeByScore and
  * zslDeleteRangeByRank. */
+//删除node节点
 void zslDeleteNode(zskiplist *zsl, zskiplistNode *x, zskiplistNode **update) {
     int i;
     for (i = 0; i < zsl->level; i++) {
@@ -472,22 +495,25 @@ unsigned long zslDeleteRangeByRank(zskiplist *zsl, unsigned int start, unsigned 
  * Returns 0 when the element cannot be found, rank otherwise.
  * Note that the rank is 1-based due to the span of zsl->header to the
  * first element. */
+//查找指定ele的排序号
 unsigned long zslGetRank(zskiplist *zsl, double score, sds ele) {
     zskiplistNode *x;
     unsigned long rank = 0;
     int i;
-
+    //指向统一的头部节点
     x = zsl->header;
+    //通过最上层的节点快速定位区间，，然后下移到具体的位置
     for (i = zsl->level-1; i >= 0; i--) {
         while (x->level[i].forward &&
             (x->level[i].forward->score < score ||
                 (x->level[i].forward->score == score &&
                 sdscmp(x->level[i].forward->ele,ele) <= 0))) {
-            rank += x->level[i].span;
+            rank += x->level[i].span;//两个节点的间隔
             x = x->level[i].forward;
         }
 
         /* x might be equal to zsl->header, so test if obj is non-NULL */
+        //相同内容（sds）则返回对应的排名
         if (x->ele && sdscmp(x->ele,ele) == 0) {
             return rank;
         }

@@ -43,6 +43,7 @@
  * recompress: 1 bit, bool, true if node is temporary decompressed for usage.
  * attempted_compress: 1 bit, boolean, used for verifying during testing.
  * extra: 10 bits, free for future use; pads out the remainder of 32 bits */
+//快速链表的节点信息
 typedef struct quicklistNode {
     struct quicklistNode *prev;
     struct quicklistNode *next;

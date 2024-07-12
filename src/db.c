@@ -35,7 +35,7 @@
 #include <signal.h>
 #include <ctype.h>
 /**
- *数据库操作的实现
+ *数据库操作的实现,具体的数据结构内容
  */
 /* Database backup. */
 struct dbBackup {

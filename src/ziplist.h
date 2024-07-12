@@ -35,11 +35,15 @@
 #define ZIPLIST_TAIL 1
 
 /* Each entry in the ziplist is either a string or an integer. */
+//压缩链表的节点entry
 typedef struct {
     /* When string is used, it is provided with the length (slen). */
+    //如果使用非整形时，sval保存的时字符串
     unsigned char *sval;
+    //长度
     unsigned int slen;
     /* When integer is used, 'sval' is NULL, and lval holds the value. */
+    //当使用整数时，'sval' 为 NULL，而 lval 保存值
     long long lval;
 } ziplistEntry;
 

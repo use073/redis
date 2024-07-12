@@ -270,6 +270,7 @@
 /* Don't let ziplists grow over 1GB in any case, don't wanna risk overflow in
  * zlbytes*/
 #define ZIPLIST_MAX_SAFETY_SIZE (1<<30)
+//往压缩链表里面增加以数据
 int ziplistSafeToAdd(unsigned char* zl, size_t add) {
     size_t len = zl? ziplistBlobLen(zl): 0;
     if (len + add > ZIPLIST_MAX_SAFETY_SIZE)
@@ -281,18 +282,23 @@ int ziplistSafeToAdd(unsigned char* zl, size_t add) {
 /* We use this function to receive information about a ziplist entry.
  * Note that this is not how the data is actually encoded, is just what we
  * get filled by a function in order to operate more easily. */
+//压缩链表的结构
 typedef struct zlentry {
-    unsigned int prevrawlensize; /* Bytes used to encode the previous entry len*/
-    unsigned int prevrawlen;     /* Previous entry len. */
+    unsigned int prevrawlensize; /* Bytes used to encode the previous entry len  用于编码前一个条目的字节数长度*/
+    unsigned int prevrawlen;     /* Previous entry len. 前一个条目的长度*/
+    //用于编码当前entry的类型/长度
     unsigned int lensize;        /* Bytes used to encode this entry type/len.
                                     For example strings have a 1, 2 or 5 bytes
                                     header. Integers always use a single byte.*/
+    //用于表示实际的字节长度
     unsigned int len;            /* Bytes used to represent the actual entry.
                                     For strings this is just the string length
                                     while for integers it is 1, 2, 3, 4, 8 or
                                     0 (for 4 bit immediate) depending on the
                                     number range. */
+    //头部大小，prevrawlensize+lensize
     unsigned int headersize;     /* prevrawlensize + lensize. */
+    //
     unsigned char encoding;      /* Set to ZIP_STR_* or ZIP_INT_* depending on
                                     the entry encoding. However for 4 bits
                                     immediate integers this can assume a range
@@ -639,7 +645,7 @@ static inline int zipEntrySafe(unsigned char* zl, size_t zlbytes, unsigned char 
         ZIP_DECODE_LENGTH(p + e->prevrawlensize, e->encoding, e->lensize, e->len);
         e->headersize = e->prevrawlensize + e->lensize;
         e->p = p;
-        /* We didn't call ZIP_ASSERT_ENCODING, so we check lensize was set to 0. */
+        /* We didn't call ZIP_ASSZIPLIST_BYTESERT_ENCODING, so we check lensize was set to 0. */
         if (unlikely(e->lensize == 0))
             return 0;
         /* Make sure the entry doesn't rech outside the edge of the ziplist */
@@ -1427,7 +1433,7 @@ unsigned int ziplistLen(unsigned char *zl) {
 
 /* Return ziplist blob size in bytes. */
 size_t ziplistBlobLen(unsigned char *zl) {
-    return intrev32ifbe(ZIPLIST_BYTES(zl));
+    return intrev32ifbe((zl));
 }
 
 void ziplistRepr(unsigned char *zl) {

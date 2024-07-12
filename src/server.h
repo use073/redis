@@ -383,7 +383,7 @@ typedef enum {
 
 /* Anti-warning macro... */
 #define UNUSED(V) ((void) V)
-
+//跳表最大层级2^32层，最大数量则是2^64个节点
 #define ZSKIPLIST_MAXLEVEL 32 /* Should be enough for 2^64 elements */
 #define ZSKIPLIST_P 0.25      /* Skiplist P = 1/4 */
 
@@ -1005,22 +1005,23 @@ struct sharedObjectsStruct {
 };
 
 /* ZSETs use a specialized version of Skiplists */
+//跳表节点
 typedef struct zskiplistNode {
-    sds ele;
-    double score;
-    struct zskiplistNode *backward;
+    sds ele;    //存储的具体value
+    double score;   //zset中的score
+    struct zskiplistNode *backward;//后退节点，之前的节点
     struct zskiplistLevel {
-        struct zskiplistNode *forward;
-        unsigned long span;
-    } level[];
+        struct zskiplistNode *forward;//前进节点,也就是下一个节点
+        unsigned long span; //跨度，两个节点的间隔
+    } level[];//层级
 } zskiplistNode;
-
+//跳表的结构,跳表的整体结构，里面包含了头、尾指针，可以快速定位
 typedef struct zskiplist {
-    struct zskiplistNode *header, *tail;
-    unsigned long length;
-    int level;
+    struct zskiplistNode *header, *tail;//记录头尾节点,其中头节点为固定的不带意义的节点
+    unsigned long length;//跳表的链表长度
+    int level;//最高层级为多少层
 } zskiplist;
-
+//zset最外层的数据结构，封装饿了字典结构和跳表结构，字典结构用于快速定位数据
 typedef struct zset {
     dict *dict;
     zskiplist *zsl;
@@ -1189,7 +1190,7 @@ struct redisServer {
     redisDb *db;
     dict *commands;             /* Command table */
     dict *orig_commands;        /* Command table before command renaming. */
-    aeEventLoop *el;
+    aeEventLoop *el;            /*事件循环*/
     rax *errors;                /* Errors table */
     redisAtomic unsigned int lruclock; /* Clock for LRU eviction */
     volatile sig_atomic_t shutdown_asap; /* SHUTDOWN needed ASAP */
