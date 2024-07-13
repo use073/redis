@@ -1433,7 +1433,7 @@ unsigned int ziplistLen(unsigned char *zl) {
 
 /* Return ziplist blob size in bytes. */
 size_t ziplistBlobLen(unsigned char *zl) {
-    return intrev32ifbe((zl));
+    return intrev32ifbe(ZIPLIST_BYTES(zl));
 }
 
 void ziplistRepr(unsigned char *zl) {

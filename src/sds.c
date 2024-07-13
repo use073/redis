@@ -339,7 +339,7 @@ sds sdsMakeRoomFor(sds s, size_t addlen) {
  * references must be substituted with the new pointer returned by the call. */
 //重新分配sds空间，使得字符串变得紧凑(未使用空间为0)
 sds sdsRemoveFreeSpace(sds s, int would_regrow) {
-    return (s, sdslen(s), would_regrow);
+    return sdsResize(s, sdslen(s), would_regrow);
 }
 
 /* Resize the allocation, this can make the allocation bigger or smaller,
