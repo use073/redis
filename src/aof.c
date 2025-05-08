@@ -2185,7 +2185,7 @@ void backgroundRewriteDoneHandler(int exitcode, int bysignal) {
                 goto cleanup;
             }
             latencyEndMonitor(latency);
-            latencyAddSampleIfNeeded("aof-rewrite-done-fsync",latency);
+            latencyAddSampleIfNeeded("aof-rewrite-doane-fsync",latency);
         }
 
         serverLog(LL_NOTICE,
